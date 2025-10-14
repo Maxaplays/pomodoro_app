@@ -30,23 +30,63 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int remainingSeconds = 20;
+  Timer? timer;
+  bool isRunning = false;
 
   void startTimer() {
-    int remainingSeconds = 20;
+    if (isRunning) return;
+    isRunning = true;
 
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      int minutes = remainingSeconds ~/ 60;
-      int seconds = remainingSeconds % 60;
-      var display =
-          '${minutes.toString().padLeft(2, '0')} : ${seconds.toString().padLeft(2, '0')}';
-      remainingSeconds--;
+    timer = Timer.periodic(Duration(seconds: 1), (activeTimer) {
+      var display = formatTime(remainingSeconds);
+
+      setState(() {
+        remainingSeconds--;
+      });
+
       print('Remaining: $display');
 
       if (remainingSeconds == 0) {
-        print('Time is up');
-        timer.cancel();
+        pauseWhenTimerZero();
       }
+    });
+  }
+
+  void resetTimer() {
+    setState(() {
+      remainingSeconds = 20;
+      isRunning = false;
+    });
+  }
+
+  void pauseTimer() {
+    setState(() {
+      isRunning = false;
+      timer?.cancel();
+    });
+  }
+
+  void resumeTimer() {
+    if (!isRunning) startTimer();
+  }
+
+  formatTime(int activeSeconds) {
+    int minutes = activeSeconds ~/ 60;
+    int seconds = activeSeconds % 60;
+    var display =
+        '${minutes.toString().padLeft(2, '0')} : ${seconds.toString().padLeft(2, '0')}';
+
+    return display;
+  }
+
+  pauseWhenTimerZero() {
+    print('Time is up');
+    timer?.cancel();
+    setState(() {
+      isRunning = false;
+      timer = null;
+      remainingSeconds = 20;
     });
   }
 
@@ -61,6 +101,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: [
             ElevatedButton(onPressed: startTimer, child: Text('Start')),
+            ElevatedButton(onPressed: resetTimer, child: Text('Reset')),
+            ElevatedButton(onPressed: pauseTimer, child: Text('Pause')),
+            ElevatedButton(onPressed: resumeTimer, child: Text('Resume')),
           ],
         ),
       ),
