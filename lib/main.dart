@@ -33,19 +33,16 @@ class _MyHomePageState extends State<MyHomePage> {
   int remainingSeconds = 20;
   Timer? timer;
   bool isRunning = false;
+  bool isPaused = false;
 
   void startTimer() {
     if (isRunning) return;
     isRunning = true;
 
     timer = Timer.periodic(Duration(seconds: 1), (activeTimer) {
-      var display = formatTime(remainingSeconds);
-
       setState(() {
         remainingSeconds--;
       });
-
-      print('Remaining: $display');
 
       if (remainingSeconds == 0) {
         pauseWhenTimerZero();
@@ -57,17 +54,24 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       remainingSeconds = 20;
       isRunning = false;
+      isPaused = false;
+      timer?.cancel();
     });
   }
 
   void pauseTimer() {
     setState(() {
       isRunning = false;
+      isPaused = true;
       timer?.cancel();
     });
   }
 
   void resumeTimer() {
+    setState(() {
+      isPaused = false;
+    });
+
     if (!isRunning) startTimer();
   }
 
@@ -81,7 +85,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   pauseWhenTimerZero() {
-    print('Time is up');
     timer?.cancel();
     setState(() {
       isRunning = false;
@@ -100,10 +103,24 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           children: [
-            ElevatedButton(onPressed: startTimer, child: Text('Start')),
-            ElevatedButton(onPressed: resetTimer, child: Text('Reset')),
-            ElevatedButton(onPressed: pauseTimer, child: Text('Pause')),
-            ElevatedButton(onPressed: resumeTimer, child: Text('Resume')),
+            Text(
+              formatTime(remainingSeconds),
+              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!isRunning && !isPaused)
+                  ElevatedButton(onPressed: startTimer, child: Text('Start')),
+                if (isRunning) ...[
+                  ElevatedButton(onPressed: pauseTimer, child: Text('Pause')),
+                ],
+                if (isPaused)
+                  ElevatedButton(onPressed: resumeTimer, child: Text('Resume')),
+
+                ElevatedButton(onPressed: resetTimer, child: Text('Reset')),
+              ],
+            ),
           ],
         ),
       ),
